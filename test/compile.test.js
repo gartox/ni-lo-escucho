@@ -175,3 +175,18 @@ test('la condición recibe los datos de la cadena y lo pedido para todos no pasa
   assert.deepEqual(targets(sheet), [[condition, email]]);
   assert.deepEqual(targets(condition), [[whatsapp]]);
 });
+
+test('la respuesta al cliente nunca le pide contraseñas, tokens ni credenciales', () => {
+  const reply = toClientReply(normalizeSpec({
+    summary: 'Pedidos',
+    trigger: { type: 'form', details: '' },
+    steps: [],
+    conditions: [],
+    missing: ['Credenciales de Google Sheets', 'Token de Telegram', 'Nombre de la hoja de pedidos'],
+    questions: ['¿Qué método de autenticación requiere la API?', '¿A qué número aviso?']
+  }));
+  assert.doesNotMatch(reply, /credencial|token|autenticaci/i);
+  assert.match(reply, /nombre de la hoja de pedidos/);
+  assert.match(reply, /¿A qué número aviso\?/);
+  assert.match(reply, /no me las mandes por aquí/);
+});

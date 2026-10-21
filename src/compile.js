@@ -220,6 +220,9 @@ export function validateWorkflow(workflow) {
   return true;
 }
 
+// Las cuentas se conectan en n8n con el cliente, nunca se piden por WhatsApp.
+const secretLike = /credencial|contraseñ|password|token|api ?key|clave api|clave de api|autenticaci/i;
+
 export function toClientReply(spec) {
   const trigger = triggerNames[spec.trigger.type] || 'Iniciar el flujo';
   const lines = [
@@ -231,13 +234,19 @@ export function toClientReply(spec) {
     lines.push(`• ${names[step.type] || 'Acción pendiente'}: ${step.details || 'pendiente de definir'}.`);
   }
 
+  const asksForSecrets = [...spec.questions, ...spec.missing].some(item => secretLike.test(item));
   const questions = [
-    ...spec.questions,
-    ...spec.missing.map(item => `¿Me compartes ${item}?`)
+    ...spec.questions.filter(item => !secretLike.test(item)),
+    ...spec.missing
+      .filter(item => !secretLike.test(item))
+      .map(item => `¿Me compartes ${item.charAt(0).toLowerCase()}${item.slice(1)}?`)
   ].slice(0, 6);
   if (questions.length) {
     lines.push('', 'Preguntas para completar el flujo:');
     questions.forEach((question, index) => lines.push(`${index + 1}. ${question}`));
+  }
+  if (asksForSecrets) {
+    lines.push('', 'Las cuentas y contraseñas las conectamos juntos en n8n; por favor no me las mandes por aquí.');
   }
   return lines.join('\n');
 }
