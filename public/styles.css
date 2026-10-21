@@ -1,0 +1,10 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #27221d; background: #f4efe8; }
+body { margin: 0 auto; max-width: 760px; padding: 1rem; }
+header { border-bottom: 3px solid #6c3d22; margin-bottom: 1rem; }
+label { display: block; margin: 1rem 0; font-weight: 700; }
+input, textarea, button { box-sizing: border-box; font: inherit; margin-top: .4rem; padding: .7rem; width: 100%; }
+textarea { min-height: 9rem; }
+button { background: #6c3d22; border: 0; color: white; cursor: pointer; }
+.message { min-height: 1.5rem; }
+pre { background: white; overflow: auto; padding: 1rem; white-space: pre-wrap; }
+a { color: #6c3d22; font-weight: 700; }

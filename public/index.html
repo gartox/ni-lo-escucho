@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/styles.css">
+    <title>Ni lo escucho</title>
+  </head>
+  <body>
+    <header><h1>Ni lo escucho</h1><p>Del audio de WhatsApp al primer flujo de n8n.</p></header>
+    <main>
+      <form id="processForm">
+        <label>Audio del cliente<input id="audio" type="file" accept="audio/*"></label>
+        <label>O pega la transcripción<textarea id="text" maxlength="12000"></textarea></label>
+        <button>Armar borrador</button>
+      </form>
+      <p id="message" class="message"></p>
+      <section id="result" hidden>
+        <h2>Transcripción</h2><p id="transcript"></p>
+        <h2>Lo que entendí</h2><p id="summary"></p>
+        <h2>Flujo</h2><ol id="flow"></ol>
+        <h2>Respuesta para el cliente</h2><pre id="reply"></pre><button id="copy" type="button">Copiar respuesta</button>
+        <p><a id="download" download>Descargar flujo para n8n</a></p>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
