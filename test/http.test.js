@@ -46,3 +46,19 @@ test('procesa texto, guarda la solicitud y permite descargar el workflow', async
     await rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test('un archivo inexistente responde 404 y el servidor sigue vivo', async () => {
+  const dataDir = await mkdtemp(join(tmpdir(), 'ni-lo-404-'));
+  const app = createApp({ dataDir, ollamaUrl: 'http://127.0.0.1:9', model: 'modelo' });
+  const baseUrl = await listen(app);
+  try {
+    const missing = await fetch(`${baseUrl}/favicon.ico`);
+    assert.equal(missing.status, 404);
+    const home = await fetch(`${baseUrl}/`);
+    assert.equal(home.status, 200);
+  } finally {
+    app.closeAllConnections();
+    await new Promise(resolve => app.close(resolve));
+    await rm(dataDir, { recursive: true, force: true });
+  }
+});

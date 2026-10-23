@@ -191,7 +191,7 @@ export function createApp(config = {}) {
         });
         return response.end(JSON.stringify(item.workflow, null, 2));
       }
-      return serveStatic(request, response, url.pathname);
+      return await serveStatic(request, response, url.pathname);
     } catch (error) {
       const status = error instanceof HttpError ? error.status : 500;
       send(response, status, { error: error.message || 'Error interno.' });

@@ -116,7 +116,8 @@ export function compileWorkflow(spec, { name = 'Flujo generado' } = {}) {
   const branches = new Map();
   const openCondition = condition => {
     if (branches.has(condition.id)) return branches.get(condition.id);
-    const item = conditionNode(condition, [column * 260, 0]);
+    // Las condiciones y sus ramas van en filas aparte para que la cadena principal se lea derecha.
+    const item = conditionNode(condition, [column * 260, 240]);
     item.name = uniqueName(nodes, item.name);
     nodes.push(item);
     addConnection(previous, item);
@@ -139,14 +140,13 @@ export function compileWorkflow(spec, { name = 'Flujo generado' } = {}) {
     }
     const state = openCondition(condition);
     const output = condition.then.includes(step.id) ? 0 : 1;
-    const current = addStep(step, [state.column * 260, output === 0 ? -200 : 200]);
+    const current = addStep(step, [state.column * 260, output === 0 ? 240 : 420]);
     const from = state.last[output];
     addConnection(from, current, from === state.item ? output : 0);
     state.last[output] = current;
     state.column += 1;
   }
-  // Una condición sin pasos propios se conserva para que el cliente vea qué se va a evaluar.
-  for (const condition of spec.conditions) openCondition(condition);
+  // Una condición sin pasos propios no hace nada en n8n: se omite del flujo (sigue en la especificación).
 
   const workflow = {
     name,
@@ -223,23 +223,28 @@ export function validateWorkflow(workflow) {
 // Las cuentas se conectan en n8n con el cliente, nunca se piden por WhatsApp.
 const secretLike = /credencial|contraseñ|password|token|api ?key|clave api|clave de api|autenticaci/i;
 
+const sentence = text => `${String(text).trim().replace(/[.\s]+$/, '')}.`;
+// Solo baja la primera letra de palabras comunes ("Número" → "número"), no siglas como "ID".
+const lowerFirst = text => (/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text);
+
 export function toClientReply(spec) {
   const trigger = triggerNames[spec.trigger.type] || 'Iniciar el flujo';
   const lines = [
     'Entendí esto:',
     `• ${spec.summary || 'Quieres automatizar este proceso.'}`,
-    `• Disparador: ${spec.trigger.details || trigger}.`
+    `• Disparador: ${sentence(spec.trigger.details || trigger)}`
   ];
   for (const step of spec.steps) {
-    lines.push(`• ${names[step.type] || 'Acción pendiente'}: ${step.details || 'pendiente de definir'}.`);
+    lines.push(`• ${names[step.type] || 'Acción pendiente'}: ${sentence(step.details || 'pendiente de definir')}`);
   }
 
   const asksForSecrets = [...spec.questions, ...spec.missing].some(item => secretLike.test(item));
   const questions = [
     ...spec.questions.filter(item => !secretLike.test(item)),
-    ...spec.missing
+    // Si el modelo ya redactó preguntas, los datos faltantes suelen repetirlas: solo se usan sin ellas.
+    ...(spec.questions.length ? [] : spec.missing
       .filter(item => !secretLike.test(item))
-      .map(item => `¿Me compartes ${item.charAt(0).toLowerCase()}${item.slice(1)}?`)
+      .map(item => `¿Me compartes ${lowerFirst(item)}?`))
   ].slice(0, 6);
   if (questions.length) {
     lines.push('', 'Preguntas para completar el flujo:');

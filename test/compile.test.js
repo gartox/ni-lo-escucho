@@ -118,8 +118,17 @@ test('la respuesta al cliente usa resumen y preguntas numeradas en español', ()
 
   assert.match(reply, /Guardar pedidos/);
   assert.match(reply, /1\. ¿Cuál hoja debo usar\?/);
-  assert.match(reply, /2\. ¿Me compartes número de WhatsApp\?/);
+  // Con preguntas del modelo, los datos faltantes no se repiten como preguntas.
+  assert.doesNotMatch(reply, /2\./);
   assert.doesNotMatch(reply, /save_to_sheet|trigger|steps/);
+  assert.doesNotMatch(reply, /\.\./);
+
+  const fromMissing = toClientReply({
+    summary: 'x', trigger: { type: 'form', details: '' }, steps: [],
+    questions: [], missing: ['Número de WhatsApp', 'ID de la hoja']
+  });
+  assert.match(fromMissing, /1\. ¿Me compartes número de WhatsApp\?/);
+  assert.match(fromMissing, /2\. ¿Me compartes ID de la hoja\?/);
 });
 
 test('la condición usa operadores de n8n y no deja inyectar código en la expresión', () => {
@@ -186,7 +195,6 @@ test('la respuesta al cliente nunca le pide contraseñas, tokens ni credenciales
     questions: ['¿Qué método de autenticación requiere la API?', '¿A qué número aviso?']
   }));
   assert.doesNotMatch(reply, /credencial|token|autenticaci/i);
-  assert.match(reply, /nombre de la hoja de pedidos/);
   assert.match(reply, /¿A qué número aviso\?/);
   assert.match(reply, /no me las mandes por aquí/);
 });

@@ -1,0 +1,140 @@
+{
+  "name": "Flujo de Ni lo escucho",
+  "nodes": [
+    {
+      "name": "Recibir formulario",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "parameters": {
+        "formTitle": "Formulario"
+      },
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Guardar en hoja",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "parameters": {
+        "operation": "append",
+        "documentId": "«PENDIENTE: hoja de cálculo»",
+        "sheetName": "«PENDIENTE: pestaña»"
+      },
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "name": "Enviar correo",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "parameters": {
+        "fromEmail": "«PENDIENTE: correo remitente»",
+        "toEmail": "«PENDIENTE: correo destino»",
+        "subject": "«PENDIENTE: asunto»",
+        "emailType": "text",
+        "message": "«PENDIENTE: mensaje»"
+      },
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "name": "¿Cantidad de Personas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Number($json.Cantidad_de_Personas) }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "position": [
+        780,
+        240
+      ]
+    },
+    {
+      "name": "Avisar por WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "parameters": {
+        "operation": "send",
+        "recipientPhoneNumber": "«PENDIENTE: número de WhatsApp»",
+        "textBody": "«PENDIENTE: mensaje»"
+      },
+      "position": [
+        1040,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Recibir formulario": {
+      "main": [
+        [
+          {
+            "node": "Guardar en hoja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en hoja": {
+      "main": [
+        [
+          {
+            "node": "Enviar correo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar correo": {
+      "main": [
+        [
+          {
+            "node": "¿Cantidad de Personas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cantidad de Personas?": {
+      "main": [
+        [
+          {
+            "node": "Avisar por WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
