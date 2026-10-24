@@ -198,3 +198,35 @@ test('la respuesta al cliente nunca le pide contraseñas, tokens ni credenciales
   assert.match(reply, /¿A qué número aviso\?/);
   assert.match(reply, /no me las mandes por aquí/);
 });
+
+test('el formulario crea el campo que lee la condición, también con acentos', () => {
+  const workflow = compileWorkflow(normalizeSpec({
+    summary: 'x',
+    trigger: { type: 'form', details: '' },
+    steps: [{ id: 'aviso', type: 'send_whatsapp', details: '', when: null }],
+    conditions: [{
+      id: 'c1', field: 'número de personas', operator: 'greater_than', value: '50', then: ['aviso'], else: []
+    }],
+    missing: [],
+    questions: []
+  }), { name: 'acentos' });
+  const form = workflow.nodes.find(item => item.type === 'n8n-nodes-base.formTrigger');
+  const condition = workflow.nodes.find(item => item.type === 'n8n-nodes-base.if');
+  const label = form.parameters.formFields.values[0].fieldLabel;
+  assert.equal(label, 'numero_de_personas');
+  assert.match(condition.parameters.conditions.conditions[0].leftValue, new RegExp(`\\$json\\.${label}\\)`));
+});
+
+test('la respuesta repite en palabras los números de cada condición para confirmarlos', () => {
+  const reply = toClientReply(normalizeSpec({
+    summary: 'x',
+    trigger: { type: 'form', details: '' },
+    steps: [{ id: 'aviso', type: 'send_whatsapp', details: '', when: null }],
+    conditions: [{
+      id: 'c1', field: 'personas', operator: 'greater_than', value: '50', then: ['aviso'], else: []
+    }],
+    missing: [],
+    questions: []
+  }));
+  assert.match(reply, /Solo si personas es mayor que 50: ¿es correcto\?/);
+});

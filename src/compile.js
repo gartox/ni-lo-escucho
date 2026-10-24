@@ -93,6 +93,14 @@ export function compileWorkflow(spec, { name = 'Flujo generado' } = {}) {
     triggerCatalog[spec.trigger.type],
     [0, 0]
   );
+  // Quien escribe el dato y quien lo lee deben usar el mismo nombre: si el disparador es un formulario,
+  // se crea un campo por cada condición con el mismo nombre saneado que leerá el nodo IF.
+  const conditionFields = [...new Set(spec.conditions.map(condition => safeField(condition.field)))];
+  if (spec.trigger.type === 'form' && conditionFields.length) {
+    trigger.parameters.formFields = {
+      values: conditionFields.map(field => ({ fieldLabel: field, requiredField: true }))
+    };
+  }
   nodes.push(trigger);
 
   const addConnection = (from, to, output = 0) => {
@@ -223,6 +231,13 @@ export function validateWorkflow(workflow) {
 // Las cuentas se conectan en n8n con el cliente, nunca se piden por WhatsApp.
 const secretLike = /credencial|contraseñ|password|token|api ?key|clave api|clave de api|autenticaci/i;
 
+const operatorWords = {
+  equals: 'es igual a',
+  not_equals: 'es distinto de',
+  contains: 'contiene',
+  greater_than: 'es mayor que',
+  less_than: 'es menor que'
+};
 const sentence = text => `${String(text).trim().replace(/[.\s]+$/, '')}.`;
 // Solo baja la primera letra de palabras comunes ("Número" → "número"), no siglas como "ID".
 const lowerFirst = text => (/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text);
@@ -236,6 +251,11 @@ export function toClientReply(spec) {
   ];
   for (const step of spec.steps) {
     lines.push(`• ${names[step.type] || 'Acción pendiente'}: ${sentence(step.details || 'pendiente de definir')}`);
+  }
+  // Los números de las condiciones se repiten en palabras para que el cliente confirme lo que se oyó
+  // (Whisper puede confundir "cincuenta" con "quince").
+  for (const condition of spec.conditions ?? []) {
+    lines.push(`• Solo si ${safeField(condition.field).replace(/_/g, ' ')} ${operatorWords[condition.operator] ?? 'es'} ${condition.value}: ¿es correcto?`);
   }
 
   const asksForSecrets = [...spec.questions, ...spec.missing].some(item => secretLike.test(item));
